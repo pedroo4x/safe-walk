@@ -1,55 +1,46 @@
 from ultralytics import YOLO
-import cv2
 
-model = YOLO("yolov8n.pt")
-cap = cv2.VideoCapture(0)
 
-# Create the named window explicitly so we can track its properties
-window_name = "detector"
-cv2.namedWindow(window_name)
+class ObjectDetector:
+    def __init__(self, model_path="yolov8n.pt"):
+        self.model = YOLO(model_path)
 
-while True:
-    ret, frame = cap.read()
-    if not ret:
-        break
+    def detect(self, frame):
+        results = self.model(frame, verbose=False)[0]
 
-    results = model(frame, verbose=False)[0]
-    frame_height = frame.shape[0]
-    closest_tier = "none"
+        frame_height = frame.shape[0]
+        detections = []
+        closest_tier = "none"
 
-    for box in results.boxes:
-        label = model.names[int(box.cls[0])]
-        x1, y1, x2, y2 = box.xyxy[0]
-        box_height = y2 - y1
-        ratio = box_height / frame_height
+        for box in results.boxes:
+            label = self.model.names[int(box.cls[0])]
 
-        if ratio > 0.4:
-            tier = "close"
-        elif ratio > 0.2:
-            tier = "medium"
-        else:
-            tier = "far"
+            x1, y1, x2, y2 = box.xyxy[0]
 
-        if tier == "close":
-            closest_tier = "close"
-        elif tier == "medium" and closest_tier != "close":
-            closest_tier = "medium"
+            x1, y1, x2, y2 = int(x1), int(y1), int(x2), int(y2)
 
-        cv2.rectangle(frame, (int(x1), int(y1)), (int(x2), int(y2)), (0,255,0), 2)
-        cv2.putText(frame, f"{label} {tier}", (int(x1), int(y1)-10),
-                    cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0,255,0), 2)
+            box_height = y2 - y1
+            ratio = box_height / frame_height
 
-    print(closest_tier)
+            if ratio > 0.4:
+                tier = "close"
+            elif ratio > 0.2:
+                tier = "medium"
+            else:
+                tier = "far"
 
-    cv2.imshow("detector", frame)
-    
-    # 1. Check for 'q' key press
-    if cv2.waitKey(1) & 0xFF == ord('q'):
-        break
+            if tier == "close":
+                closest_tier = "close"
+            elif tier == "medium" and closest_tier != "close":
+                closest_tier = "medium"
 
-    # 2. Check if the window's "X" button was clicked
-    if cv2.getWindowProperty(window_name, cv2.WND_PROP_VISIBLE) < 1:
-        break
+            detections.append({
+                "label": label,
+                "tier": tier,
+                "box": (x1, y1, x2, y2)
+            })
 
-cap.release()
-cv2.destroyAllWindows()
+        return {
+            "detections": detections,
+            "closest_tier": closest_tier
+        }
