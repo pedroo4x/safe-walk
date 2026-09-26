@@ -4,6 +4,10 @@ import cv2
 model = YOLO("yolov8n.pt")
 cap = cv2.VideoCapture(0)
 
+# Create the named window explicitly so we can track its properties
+window_name = "detector"
+cv2.namedWindow(window_name)
+
 while True:
     ret, frame = cap.read()
     if not ret:
@@ -38,7 +42,13 @@ while True:
     print(closest_tier)
 
     cv2.imshow("detector", frame)
+    
+    # 1. Check for 'q' key press
     if cv2.waitKey(1) & 0xFF == ord('q'):
+        break
+
+    # 2. Check if the window's "X" button was clicked
+    if cv2.getWindowProperty(window_name, cv2.WND_PROP_VISIBLE) < 1:
         break
 
 cap.release()
