@@ -6,7 +6,7 @@ class ObjectDetector:
 
     def __init__(self, model_path="yolov8n.pt"):
         self.model = YOLO(model_path)
-
+        self.depth_model = YOLO("yolo26n-depth.pt")
         # Store previous center positions for tracked objects
         self.previous_positions = {}
 
