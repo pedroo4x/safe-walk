@@ -3,3 +3,4 @@ opencv-python
 google-genai
 numpy
 pyttsx3
+PySide6
