@@ -2,3 +2,4 @@ ultralytics
 opencv-python
 google-genai
 numpy
+pyttsx3
